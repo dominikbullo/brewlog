@@ -87,6 +87,7 @@ fn test_state_config() -> AppStateConfig {
         openrouter_url: brewlog::infrastructure::ai::OPENROUTER_URL.to_string(),
         openrouter_api_key: String::new(),
         openrouter_model: "openrouter/free".to_string(),
+        openrouter_web_search: true,
         stats_invalidator: brewlog::application::services::StatsInvalidator::new(stats_tx),
         timeline_invalidator: brewlog::application::services::TimelineInvalidator::new(timeline_tx),
     }
@@ -172,6 +173,7 @@ pub async fn spawn_app_with_timeline_sync() -> TestApp {
         openrouter_url: brewlog::infrastructure::ai::OPENROUTER_URL.to_string(),
         openrouter_api_key: String::new(),
         openrouter_model: "openrouter/free".to_string(),
+        openrouter_web_search: true,
         stats_invalidator: brewlog::application::services::StatsInvalidator::new(stats_tx),
         timeline_invalidator: brewlog::application::services::TimelineInvalidator::new(timeline_tx),
     };

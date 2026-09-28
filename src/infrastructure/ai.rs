@@ -110,10 +110,19 @@ pub async fn extract_roaster(
     url: &str,
     api_key: &str,
     model: &str,
+    web_search: bool,
     input: &ExtractionInput,
 ) -> Result<(ExtractedRoaster, Option<Usage>), AppError> {
-    let (content, usage) =
-        call_openrouter(client, url, api_key, model, ROASTER_PROMPT, input).await?;
+    let (content, usage) = call_openrouter(
+        client,
+        url,
+        api_key,
+        model,
+        web_search,
+        ROASTER_PROMPT,
+        input,
+    )
+    .await?;
     let json = extract_json(&content);
 
     let extracted = serde_json::from_str(json).map_err(|e| {
@@ -127,10 +136,11 @@ pub async fn extract_roast(
     url: &str,
     api_key: &str,
     model: &str,
+    web_search: bool,
     input: &ExtractionInput,
 ) -> Result<(ExtractedRoast, Option<Usage>), AppError> {
     let (content, usage) =
-        call_openrouter(client, url, api_key, model, ROAST_PROMPT, input).await?;
+        call_openrouter(client, url, api_key, model, web_search, ROAST_PROMPT, input).await?;
     let json = extract_json(&content);
 
     let extracted = serde_json::from_str(json).map_err(|e| {
@@ -144,9 +154,11 @@ pub async fn extract_bag_scan(
     url: &str,
     api_key: &str,
     model: &str,
+    web_search: bool,
     input: &ExtractionInput,
 ) -> Result<(ExtractedBagScan, Option<Usage>), AppError> {
-    let (content, usage) = call_openrouter(client, url, api_key, model, SCAN_PROMPT, input).await?;
+    let (content, usage) =
+        call_openrouter(client, url, api_key, model, web_search, SCAN_PROMPT, input).await?;
     let json = extract_json(&content);
 
     let extracted = serde_json::from_str(json).map_err(|e| {
@@ -162,6 +174,7 @@ async fn call_openrouter(
     url: &str,
     api_key: &str,
     model: &str,
+    web_search: bool,
     system_prompt: &str,
     input: &ExtractionInput,
 ) -> Result<(String, Option<Usage>), AppError> {
@@ -194,15 +207,26 @@ async fn call_openrouter(
         });
     }
 
+    // `openrouter:web_search` is an OpenRouter-proprietary server-side tool
+    // (https://openrouter.ai/docs/features/web-search) — not a portable
+    // OpenAI Chat Completions param, so OpenAI-compatible proxies (e.g.
+    // LiteLLM) may reject or ignore it. Gated behind `web_search` so a
+    // non-OpenRouter `url` can omit it.
+    let tools = if web_search {
+        vec![ServerTool {
+            tool_type: "openrouter:web_search",
+        }]
+    } else {
+        Vec::new()
+    };
+
     let request_body = ChatRequest {
         model: model.to_string(),
         messages: vec![Message {
             role: "user".to_string(),
             content: content_parts,
         }],
-        tools: vec![ServerTool {
-            tool_type: "openrouter:web_search",
-        }],
+        tools,
     };
 
     let response = client
@@ -291,6 +315,7 @@ fn extract_json(raw: &str) -> &str {
 struct ChatRequest {
     model: String,
     messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     tools: Vec<ServerTool>,
 }
 
@@ -515,6 +540,26 @@ mod tests {
         assert_eq!(json["messages"][0]["content"][0]["type"], "text");
         assert_eq!(json["messages"][0]["content"][1]["type"], "image_url");
         assert_eq!(json["tools"][0]["type"], "openrouter:web_search");
+    }
+
+    #[test]
+    fn serialize_chat_request_without_tools_omits_tools_field() {
+        let request = ChatRequest {
+            model: "test-model".to_string(),
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: vec![ContentPart::Text {
+                    text: "Extract info".to_string(),
+                }],
+            }],
+            tools: Vec::new(),
+        };
+
+        let json = serde_json::to_value(&request).unwrap();
+        assert!(
+            json.get("tools").is_none(),
+            "empty tools should be omitted, not serialized as []"
+        );
     }
 
     #[test]

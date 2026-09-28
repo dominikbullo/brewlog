@@ -43,6 +43,7 @@ pub struct AppStateConfig {
     pub openrouter_url: String,
     pub openrouter_api_key: String,
     pub openrouter_model: String,
+    pub openrouter_web_search: bool,
     pub stats_invalidator: StatsInvalidator,
     pub timeline_invalidator: TimelineInvalidator,
 }
@@ -73,6 +74,7 @@ pub struct AppState {
     pub openrouter_url: String,
     pub openrouter_api_key: String,
     pub openrouter_model: String,
+    pub openrouter_web_search: bool,
     pub backup_service: Arc<BackupService>,
     pub roaster_service: RoasterService,
     pub roast_service: RoastService,
@@ -165,6 +167,7 @@ impl AppState {
             openrouter_url: config.openrouter_url,
             openrouter_api_key: config.openrouter_api_key,
             openrouter_model: config.openrouter_model,
+            openrouter_web_search: config.openrouter_web_search,
             backup_service,
             roaster_service,
             roast_service,

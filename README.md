@@ -120,11 +120,13 @@ directory is loaded automatically via [dotenvy](https://crates.io/crates/dotenvy
 
 ### Integrations
 
-| Variable                     | Purpose                                                                     | Default           |
-| ---------------------------- | --------------------------------------------------------------------------- | ----------------- |
-| `BREWLOG_OPENROUTER_API_KEY` | [OpenRouter](https://openrouter.ai/) API key for AI extraction              | **required**      |
-| `BREWLOG_OPENROUTER_MODEL`   | LLM model for AI extraction                                                 | `openrouter/free` |
-| `BREWLOG_FOURSQUARE_API_KEY` | [Foursquare](https://foursquare.com/) Places API key for nearby cafe search | **required**      |
+| Variable                        | Purpose                                                                      | Default                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `BREWLOG_OPENROUTER_API_KEY`     | API key for AI extraction, sent as a bearer token to `BREWLOG_OPENROUTER_URL` | **required**                                                              |
+| `BREWLOG_OPENROUTER_URL`         | Chat-completions endpoint. Point this at an OpenAI-compatible proxy (e.g. LiteLLM) to route AI extraction elsewhere | `https://openrouter.ai/api/v1/chat/completions`           |
+| `BREWLOG_OPENROUTER_MODEL`       | LLM model for AI extraction                                                 | `openrouter/free`                                                        |
+| `BREWLOG_OPENROUTER_WEB_SEARCH`  | Send the OpenRouter-only `openrouter:web_search` tool with extraction requests. Disable when `BREWLOG_OPENROUTER_URL` points at a non-OpenRouter provider | `true`                                                                    |
+| `BREWLOG_FOURSQUARE_API_KEY`     | [Foursquare](https://foursquare.com/) Places API key for nearby cafe search | **required**                                                              |
 
 ## Development Setup
 

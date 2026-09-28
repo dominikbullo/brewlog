@@ -135,6 +135,29 @@ pub struct ServeCommand {
     #[arg(long, env = "BREWLOG_OPENROUTER_API_KEY")]
     pub openrouter_api_key: Option<String>,
 
+    /// Chat-completions endpoint. Defaults to `OpenRouter`'s own API; point
+    /// this at an OpenAI-compatible proxy (e.g. an in-cluster `LiteLLM`) to
+    /// route AI extraction elsewhere.
+    #[arg(
+        long,
+        env = "BREWLOG_OPENROUTER_URL",
+        default_value_t = String::from(crate::infrastructure::ai::OPENROUTER_URL)
+    )]
+    pub openrouter_url: String,
+
+    /// Send the `OpenRouter`-only `openrouter:web_search` server-side tool
+    /// (<https://openrouter.ai/docs/features/web-search>) with every
+    /// extraction request. Only `OpenRouter` understands this tool type —
+    /// disable it when `openrouter_url` points at a different
+    /// OpenAI-compatible provider.
+    #[arg(
+        long,
+        env = "BREWLOG_OPENROUTER_WEB_SEARCH",
+        default_value_t = true,
+        action = clap::ArgAction::Set
+    )]
+    pub openrouter_web_search: bool,
+
     #[arg(
         long,
         env = "BREWLOG_OPENROUTER_MODEL",

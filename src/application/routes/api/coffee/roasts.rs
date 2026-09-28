@@ -380,6 +380,7 @@ pub(crate) async fn extract_roast_info(
         &state.openrouter_url,
         &state.openrouter_api_key,
         &state.openrouter_model,
+        state.openrouter_web_search,
         &input,
     )
     .await

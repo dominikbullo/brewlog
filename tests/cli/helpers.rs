@@ -98,6 +98,7 @@ fn ensure_server_started() -> Result<(String, String), String> {
                         openrouter_url: brewlog::infrastructure::ai::OPENROUTER_URL.to_string(),
                         openrouter_api_key: String::new(),
                         openrouter_model: "openrouter/free".to_string(),
+                        openrouter_web_search: true,
                         stats_invalidator: brewlog::application::services::StatsInvalidator::new(
                             stats_tx,
                         ),
