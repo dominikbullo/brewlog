@@ -33,6 +33,7 @@ pub(crate) async fn extract_bag_scan(
         &state.openrouter_url,
         &state.openrouter_api_key,
         &state.openrouter_model,
+        state.openrouter_web_search,
         &input,
     )
     .await
@@ -212,6 +213,7 @@ async fn extract_into_submission(
         &state.openrouter_url,
         &state.openrouter_api_key,
         &state.openrouter_model,
+        state.openrouter_web_search,
         &input,
     )
     .await
