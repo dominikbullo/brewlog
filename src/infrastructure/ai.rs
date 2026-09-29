@@ -109,8 +109,14 @@ impl InferenceProvider {
         }
     }
 
-    fn web_search(&self) -> bool {
-        matches!(self, Self::OpenRouter { .. })
+    /// Server-side tool names to request with every call. `OpenRouter`
+    /// sends its proprietary `openrouter:web_search` tool; the
+    /// `OpenAI`-compatible preset sends none.
+    fn tools(&self) -> &[&'static str] {
+        match self {
+            Self::OpenRouter { .. } => &["openrouter:web_search"],
+            Self::OpenAiCompatible { .. } => &[],
+        }
     }
 
     /// Model label for AI-usage accounting. Falls back to `"default"` when no
@@ -242,17 +248,15 @@ async fn call_provider(
         });
     }
 
-    // `openrouter:web_search` is an OpenRouter-proprietary server-side tool
-    // (https://openrouter.ai/docs/features/web-search) — not a portable
-    // OpenAI Chat Completions param, so OpenAI-compatible proxies (e.g.
-    // LiteLLM) reject or ignore it. Only the OpenRouter preset sends it.
-    let tools = if provider.web_search() {
-        vec![ServerTool {
-            tool_type: "openrouter:web_search",
-        }]
-    } else {
-        Vec::new()
-    };
+    // Server-side tools (e.g. `openrouter:web_search` —
+    // https://openrouter.ai/docs/features/web-search) are provider-specific
+    // and not portable across OpenAI Chat Completions-compatible endpoints,
+    // so each preset declares its own set via `InferenceProvider::tools`.
+    let tools = provider
+        .tools()
+        .iter()
+        .map(|&tool_type| ServerTool { tool_type })
+        .collect();
 
     let request_body = ChatRequest {
         model: provider.model().map(str::to_string),
@@ -632,7 +636,7 @@ mod tests {
         assert_eq!(provider.url(), OPENROUTER_URL);
         assert_eq!(provider.api_key(), Some("key"));
         assert_eq!(provider.model(), Some("openrouter/free"));
-        assert!(provider.web_search());
+        assert_eq!(provider.tools(), &["openrouter:web_search"]);
         assert_eq!(provider.model_label(), "openrouter/free");
     }
 
@@ -650,7 +654,7 @@ mod tests {
         );
         assert_eq!(provider.api_key(), None);
         assert_eq!(provider.model(), None);
-        assert!(!provider.web_search());
+        assert!(provider.tools().is_empty());
         assert_eq!(provider.model_label(), "default");
     }
 
