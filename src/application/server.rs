@@ -24,10 +24,7 @@ pub struct ServerConfig {
     pub rp_id: String,
     pub rp_origin: String,
     pub insecure_cookies: bool,
-    pub openrouter_url: String,
-    pub openrouter_api_key: String,
-    pub openrouter_model: String,
-    pub openrouter_web_search: bool,
+    pub inference_provider: crate::infrastructure::ai::InferenceProvider,
     pub foursquare_api_key: String,
 }
 
@@ -60,10 +57,7 @@ pub async fn serve(config: ServerConfig) -> anyhow::Result<()> {
             insecure_cookies: config.insecure_cookies,
             foursquare_url: crate::infrastructure::foursquare::FOURSQUARE_SEARCH_URL.to_string(),
             foursquare_api_key: config.foursquare_api_key,
-            openrouter_url: config.openrouter_url,
-            openrouter_api_key: config.openrouter_api_key,
-            openrouter_model: config.openrouter_model,
-            openrouter_web_search: config.openrouter_web_search,
+            inference_provider: config.inference_provider,
             stats_invalidator: stats_invalidator.clone(),
             timeline_invalidator,
         },

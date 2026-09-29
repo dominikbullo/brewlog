@@ -18,7 +18,7 @@ use backup::{BackupCommand, RestoreCommand};
 use bags::BagCommands;
 use brews::BrewCommands;
 use cafes::CafeCommands;
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use cups::CupCommands;
 use gear::GearCommands;
 use roasters::RoasterCommands;
@@ -135,29 +135,6 @@ pub struct ServeCommand {
     #[arg(long, env = "BREWLOG_OPENROUTER_API_KEY")]
     pub openrouter_api_key: Option<String>,
 
-    /// Chat-completions endpoint. Defaults to `OpenRouter`'s own API; point
-    /// this at an OpenAI-compatible proxy (e.g. an in-cluster `LiteLLM`) to
-    /// route AI extraction elsewhere.
-    #[arg(
-        long,
-        env = "BREWLOG_OPENROUTER_URL",
-        default_value_t = String::from(crate::infrastructure::ai::OPENROUTER_URL)
-    )]
-    pub openrouter_url: String,
-
-    /// Send the `OpenRouter`-only `openrouter:web_search` server-side tool
-    /// (<https://openrouter.ai/docs/features/web-search>) with every
-    /// extraction request. Only `OpenRouter` understands this tool type —
-    /// disable it when `openrouter_url` points at a different
-    /// OpenAI-compatible provider.
-    #[arg(
-        long,
-        env = "BREWLOG_OPENROUTER_WEB_SEARCH",
-        default_value_t = true,
-        action = clap::ArgAction::Set
-    )]
-    pub openrouter_web_search: bool,
-
     #[arg(
         long,
         env = "BREWLOG_OPENROUTER_MODEL",
@@ -165,8 +142,45 @@ pub struct ServeCommand {
     )]
     pub openrouter_model: String,
 
+    /// AI inference backend. `openrouter` is a preset for `OpenRouter`'s API
+    /// (`BREWLOG_OPENROUTER_API_KEY` / `BREWLOG_OPENROUTER_MODEL`, with the
+    /// `openrouter:web_search` server tool). `openai-compatible` routes
+    /// extraction through any `OpenAI` Chat Completions-compatible endpoint
+    /// (e.g. an in-cluster `LiteLLM`) via `BREWLOG_INFERENCE_BASE_URL` /
+    /// `BREWLOG_INFERENCE_API_KEY` / `BREWLOG_INFERENCE_MODEL`, with no tools.
+    #[arg(
+        long,
+        env = "BREWLOG_INFERENCE_PROVIDER",
+        default_value = "openrouter",
+        value_enum
+    )]
+    pub inference_provider: InferenceProviderKind,
+
+    /// Chat-completions endpoint for the `openai-compatible` provider.
+    /// Required when `--inference-provider=openai-compatible`.
+    #[arg(long, env = "BREWLOG_INFERENCE_BASE_URL")]
+    pub inference_base_url: Option<String>,
+
+    /// API key for the `openai-compatible` provider. Optional — omitted
+    /// when the proxy injects its own credentials.
+    #[arg(long, env = "BREWLOG_INFERENCE_API_KEY")]
+    pub inference_api_key: Option<String>,
+
+    /// Model for the `openai-compatible` provider. Optional — omitted from
+    /// the request so the proxy picks its own default.
+    #[arg(long, env = "BREWLOG_INFERENCE_MODEL")]
+    pub inference_model: Option<String>,
+
     #[arg(long, env = "BREWLOG_FOURSQUARE_API_KEY")]
     pub foursquare_api_key: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum InferenceProviderKind {
+    #[value(name = "openrouter")]
+    OpenRouter,
+    #[value(name = "openai-compatible")]
+    OpenAiCompatible,
 }
 
 pub fn parse_created_at(value: &str) -> anyhow::Result<DateTime<Utc>> {
