@@ -133,8 +133,8 @@ pub struct Usage {
     pub prompt_tokens: i64,
     pub completion_tokens: i64,
     pub total_tokens: i64,
-    /// Only OpenRouter reports cost; other OpenAI-compatible providers
-    /// (e.g. LiteLLM) omit it, in which case it is recorded as 0.
+    /// Only `OpenRouter` reports cost; other OpenAI-compatible providers
+    /// (e.g. `LiteLLM`) omit it, in which case it is recorded as 0.
     #[serde(default)]
     pub cost: f64,
 }
